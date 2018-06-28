@@ -33,6 +33,62 @@ function FtdiEepromInit:_init(strTestName)
       mandatory=true,
       validate=parameters.test_uint16,
       constrains=nil
+    },
+    {
+      name="group",
+      default='testgroup1',
+      help="The MAC group for the FTDI IDs.",
+      mandatory=true,
+      validate=nil,
+      constrains=nil
+    },
+    {
+      name="manufacturer",
+      default=nil,
+      help="The manufacturer ID of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
+    },
+    {
+      name="devicenr",
+      default=nil,
+      help="The device number of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
+    },
+    {
+      name="serial",
+      default=nil,
+      help="The serial number of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
+    },
+    {
+      name="hwrev",
+      default=nil,
+      help="The hardware revision of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
+    },
+    {
+      name="deviceclass",
+      default=nil,
+      help="The device class of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
+    },
+    {
+      name="hwcomp",
+      default=nil,
+      help="The hardware compatibility of the board.",
+      mandatory=true,
+      validate=parameters.test_uint32,
+      constrains=nil
     }
   }
 
@@ -214,6 +270,61 @@ end
 
 
 
+function FtdiEepromInit:__get_mac(atAttr, tLog)
+  local aucMac = nil
+
+  local pretzel = require 'pretzel'
+  local tBoardInfo = pretzel:get_board_info(atAttr.group, atAttr.manufacturer, atAttr.devicenr, atAttr.serialnr)
+  if tBoardInfo==nil then
+    tLog.error('Failed to search for the board.')
+  end
+  if #tBoardInfo == 0 then
+    tLog.info('No assigned FTDI serial number found. Request a new one.')
+
+    aucMac = pretzel:request(atAttr, 1)
+    if aucMac==nil then
+      tLog.error('Failed to request the MAC for the board.')
+    end
+    tLog.info('Received a new MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .', aucMac[1], aucMac[2], aucMac[3], aucMac[4], aucMac[5], aucMac[6])
+  elseif #tBoardInfo == 1 then
+    local tAttr = tBoardInfo[1]
+    local strMac = tAttr.mac
+    strMac1, strMac2, strMac3, strMac4, strMac5, strMac6 = string.match(strMac, '(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)')
+    aucMac = {
+      tonumber(strMac1, 16),
+      tonumber(strMac2, 16),
+      tonumber(strMac3, 16),
+      tonumber(strMac4, 16),
+      tonumber(strMac5, 16),
+      tonumber(strMac6, 16)
+    }
+    tLog.info('Found existing MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .', aucMac[1], aucMac[2], aucMac[3], aucMac[4], aucMac[5], aucMac[6])
+  else
+    tLog.error('More than one entry found for the board.')
+  end
+
+  return aucMac
+end
+
+
+
+function FtdiEepromInit:__get_serial(atAttr, tLog)
+  local strSerial = nil
+
+  local aucMac = self:__get_mac(atAttr, tLog)
+  if aucMac==nil then
+    tLog.error('Failed to get a pseudo MAC for the board. The serial can not be generated.')
+  else
+    -- Create a 6 digit serial from the pseudo mac.
+    strSerial = string.format('HXD%02X%02X%02X', aucMac[4], aucMac[5], aucMac[6])
+    tLog.info('Using serial number %s.', strSerial)
+  end
+
+  return strSerial
+end
+
+
+
 function FtdiEepromInit:run(aParameters, tLog)
   ----------------------------------------------------------------------
   --
@@ -234,6 +345,13 @@ function FtdiEepromInit:run(aParameters, tLog)
   local usUSBVendorBlank = tonumber(aParameters['usb_vendor_id_blank'])
   local usUSBProductBlank = tonumber(aParameters['usb_product_id_blank'])
 
+  local strMacGroupName = aParameters['group']
+  local ulManufacturer = tonumber(aParameters['manufacturer'])
+  local ulDeviceNr = tonumber(aParameters['devicenr'])
+  local ulSerial = tonumber(aParameters['serial'])
+  local ulHwRev = tonumber(aParameters['hwrev'])
+  local ulDeviceClass = tonumber(aParameters['deviceclass'])
+  local ulHwComp = tonumber(aParameters['hwcomp'])
 
   local luaftdi = require 'luaftdi'
 
@@ -364,8 +482,32 @@ function FtdiEepromInit:run(aParameters, tLog)
   end
   tLog.info('The EEPROM is empty.')
 
+
+  -- Get the production date.
+  local date = require 'date'
+  -- Get the local time.
+  local tDateNow = date(false)
+  -- Get the lower 2 digits of the year.
+  local ulYear = tDateNow:getisoyear() % 100
+  -- Get the week number.
+  local ulWeek = tDateNow:getweeknumber()
+  local usProductionDate = ulYear*256 + ulWeek
+
+  local atAttr = {
+    group = strMacGroupName,
+    manufacturer = ulManufacturer,
+    devicenr = ulDeviceNr,
+    serialnr = ulSerial,
+    hwrev = ulHwRev,
+    productiondate = usProductionDate,
+    deviceclass = ulDeviceClass,
+    hwcompaibility = ulHwComp
+  }
+
+  local strFTDISerial = self:__get_serial(atAttr, tLog)
+
   -- Create a new EEPROM structure.
-  tResult, strError = tEeprom:initdefaults('Hilscher', 'NXJTAG-USB', strSerial)
+  tResult, strError = tEeprom:initdefaults(self.strVendor, self.strProduct, strFTDISerial)
   assert(tResult, strError)
   -- Apply all values from the configuration file.
   for uiKey, uiValue in pairs(self.atSettings) do
@@ -383,8 +525,12 @@ function FtdiEepromInit:run(aParameters, tLog)
   assert(tResult, strError)
 
   -- Reset the device to apply the new values.
-  local tResult, strError = tContext:usb_reset()
+  tResult, strError = tContext:usb_reset()
   assert(tResult, strError)
+
+  -- Try to reset the device in the OS so that it appears with the new values.
+  tResult, strError = tContext:usb_reset_device()
+  tLog.debug('usb_reset_device returned %s, %s', tostring(tResult), tostring(strError))
 
   -- Close the FTDI context.
   tContext:usb_close()

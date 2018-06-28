@@ -14,5 +14,8 @@
 	</info>
 	<dependencies>
 		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1.0"/>
+		<!-- lua-curlv3 and luasql are needed for the embedded pretzel -->
+		<dependency group="com.github.lua-curl" module="lua-curlv3" artifact="lua5.1-lua-curlv3" version="0.3.8.1"/>
+		<dependency group="com.github.keplerproject" module="luasql" artifact="lua5.1-luasql" version="2.3.5.3"/>
 	</dependencies>
 </jonchki-artifact>
