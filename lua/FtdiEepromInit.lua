@@ -255,7 +255,7 @@ function FtdiEepromInit:parse_configuration(strFilename, tLog, atValidKeys)
 
     if tParseResult==nil then
       tResult = nil
-      tLogger.error("%s: %d,%d,%d", strMsg, uiLine, uiCol, uiPos)
+      tLog.error("%s: %d,%d,%d", strMsg, uiLine, uiCol, uiPos)
     elseif aLxpAttr.tResult==nil then
       tResult = nil
     else
