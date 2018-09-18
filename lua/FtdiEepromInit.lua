@@ -400,22 +400,34 @@ function TestClassFtdiEepromInit:run()
   tLog.debug('Looking for blank USB devices with VID=0x%04x and PID=0x%04x.', usUSBVendorBlank, usUSBProductBlank)
   local tList = tContext:usb_find_all(usUSBVendorBlank, usUSBProductBlank)
 
-  -- There must be only 1 blank device available.
+  -- Filter the device list with the product and serial string.
   local ulDeviceCnt = 0
+  local atFilteredDevices = {}
   for tListEntry in tList:iter() do
-    ulDeviceCnt = ulDeviceCnt + 1
+    -- Get the strings. This fails if the EEPROM is empty.
+    local strManufacturer = tListEntry:get_manufacturer()
+    local strProduct = tListEntry:get_description()
+    local strSerial = tListEntry:get_serial()
+    if strManufacturer==nil and strProduct==nil and strSerial==nil then
+      table.insert(atFilteredDevices, tListEntry)
+    else
+      tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+    end
   end
-  tLog.info('Found %d blank devices with VID=0x%04x and PID=0x%04x.', ulDeviceCnt, usUSBVendorBlank, usUSBProductBlank)
+
+  -- There must be only 1 blank device available.
+  local ulDeviceCnt = table.maxn(atFilteredDevices)
+  tLog.info('Found %d matching blank devices.', ulDeviceCnt)
   if ulDeviceCnt==0 then
-    error('No blank FTDI device found.')
+    error('No matching blank FTDI device found.')
   end
   if ulDeviceCnt>1 then
-    error('More than 1 blank FTDI found.')
+    error('More than 1 matching blank FTDI found.')
   end
 
   -- Open the blank device.
   tLog.debug('Open the blank device.')
-  local tResult, strError = tContext:usb_open(usUSBVendorBlank, usUSBProductBlank)
+  local tResult, strError = tContext:usb_open_dev(atFilteredDevices[1])
   assert(tResult, strError)
 
   -- Get the EEPROM object.
