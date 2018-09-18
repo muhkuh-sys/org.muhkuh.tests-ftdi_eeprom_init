@@ -1,2 +1,2 @@
 local FtdiEepromInit = require 'FtdiEepromInit'
-return FtdiEepromInit('@NAME@')
+return function(ulTestID, tLogWriter, strLogLevel) return FtdiEepromInit('@NAME@', ulTestID, tLogWriter, strLogLevel) end

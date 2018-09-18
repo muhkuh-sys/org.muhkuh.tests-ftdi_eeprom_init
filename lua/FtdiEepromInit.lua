@@ -1,95 +1,47 @@
 local class = require 'pl.class'
-local FtdiEepromInit = class()
+local TestClass = require 'test_class'
+local TestClassFtdiEepromInit = class(TestClass)
 
 
-function FtdiEepromInit:_init(strTestName)
-  self.parameters = require 'parameters'
-  self.pl = require'pl.import_into'()
+function TestClassFtdiEepromInit:_init(strTestName, uiTestCase, tLogWriter, strLogLevel)
+  self:super(strTestName, uiTestCase, tLogWriter, strLogLevel)
+
   self.lxp = require 'lxp'
 
-  self.CFG_strTestName = strTestName
+  local P = self.P
+  self:__parameter {
+    P:P('definition_file', 'This is the name of the file holding the EEPROM definition.'):
+      required(true),
 
-  self.CFG_aParameterDefinitions = {
-    {
-      name="definition_file",
-      default=nil,
-      help="This is the name of the file holding the EEPROM definition.",
-      mandatory=true,
-      validate=nil,
-      constrains=nil
-    },
-    {
-      name="usb_vendor_id_blank",
-      default="0x0403",
-      help="The USB vendor ID of the blank device.",
-      mandatory=true,
-      validate=parameters.test_uint16,
-      constrains=nil
-    },
-    {
-      name="usb_product_id_blank",
-      default="0x6010",
-      help="The USB product ID of the blank device.",
-      mandatory=true,
-      validate=parameters.test_uint16,
-      constrains=nil
-    },
-    {
-      name="group",
-      default='testgroup1',
-      help="The MAC group for the FTDI IDs.",
-      mandatory=true,
-      validate=nil,
-      constrains=nil
-    },
-    {
-      name="manufacturer",
-      default=nil,
-      help="The manufacturer ID of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    },
-    {
-      name="devicenr",
-      default=nil,
-      help="The device number of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    },
-    {
-      name="serial",
-      default=nil,
-      help="The serial number of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    },
-    {
-      name="hwrev",
-      default=nil,
-      help="The hardware revision of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    },
-    {
-      name="deviceclass",
-      default=nil,
-      help="The device class of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    },
-    {
-      name="hwcomp",
-      default=nil,
-      help="The hardware compatibility of the board.",
-      mandatory=true,
-      validate=parameters.test_uint32,
-      constrains=nil
-    }
+    P:U16('usb_vendor_id_blank', 'The USB vendor ID of the blank device.'):
+      default(0x0403):
+      required(true),
+
+    P:U16('usb_product_id_blank', 'The USB product ID of the blank device.'):
+      default(0x6010):
+      required(true),
+
+    P:P('group', 'The MAC group for the FTDI IDs.'):
+      default('testgroup1'):
+      required(true),
+
+    P:U32('manufacturer', 'The manufacturer ID of the board.'):
+      required(true),
+
+    P:U32('devicenr', 'The device number of the board.'):
+      required(true),
+
+    P:U32('serial', 'The serial number of the board.'):
+      required(true),
+
+    P:U32('hwrev', 'The hardware revision of the board.'):
+      required(true),
+
+    P:U32('deviceclass', 'The device class of the board.'):
+      required(true),
+
+    P:U32('hwcomp', 'The hardware compatibility of the board.'):
+      required(true)
   }
 
   self.strVendor = nil
@@ -105,7 +57,7 @@ end
 -- @param tParser The parser object.
 -- @param strName The name of the element.
 -- @param atAttributes A table with all attributes of the element.
-function FtdiEepromInit.parseCfg_StartElement(tParser, strName, atAttributes)
+function TestClassFtdiEepromInit.parseCfg_StartElement(tParser, strName, atAttributes)
   -- Get the user parameter from the expat parser. This is a table where we
   -- store the results and the current path in the XML.
   local aLxpAttr = tParser:getcallbacks().userdata
@@ -188,7 +140,7 @@ end
 -- It is called when an element is closed.
 -- @param tParser The parser object.
 -- @param strName The name of the closed element.
-function FtdiEepromInit.parseCfg_EndElement(tParser, strName)
+function TestClassFtdiEepromInit.parseCfg_EndElement(tParser, strName)
   local aLxpAttr = tParser:getcallbacks().userdata
 
   -- Remove the last element from the current path.
@@ -203,7 +155,7 @@ end
 -- It is called when character data is parsed.
 -- @param tParser The parser object.
 -- @param strData The character data.
-function FtdiEepromInit.parseCfg_CharacterData(tParser, strData)
+function TestClassFtdiEepromInit.parseCfg_CharacterData(tParser, strData)
   -- The current XML definition for the FTDI setting does not use any elements
   -- with character data, so this function is empty for now.
 end
@@ -214,7 +166,7 @@ end
 -- @param strFilename The path to the configuration file.
 -- @param tLog A lua-log object which can be used for log messages.
 -- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to translate them to numbers.
-function FtdiEepromInit:parse_configuration(strFilename, tLog, atValidKeys)
+function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog, atValidKeys)
   -- Be optimistic!
   local tResult = true
 
@@ -270,7 +222,7 @@ end
 
 
 
-function FtdiEepromInit:__get_mac(atAttr, tLog)
+function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
   local aucMac = nil
 
   local pretzel = require 'pretzel'
@@ -308,7 +260,7 @@ end
 
 
 
-function FtdiEepromInit:__get_serial(atAttr, tLog)
+function TestClassFtdiEepromInit:__get_serial(atAttr, tLog)
   local strSerial = nil
 
   local aucMac = self:__get_mac(atAttr, tLog)
@@ -325,14 +277,17 @@ end
 
 
 
-function FtdiEepromInit:run(aParameters, tLog)
+function TestClassFtdiEepromInit:run()
+  local atParameter = self.atParameter
+  local tLog = self.tLog
+
   ----------------------------------------------------------------------
   --
   -- Parse the parameters and collect all options.
   --
 
   -- Parse the definition_file option.
-  local strDefinitionFile = aParameters['definition_file']
+  local strDefinitionFile = atParameter['definition_file']:get()
   if strDefinitionFile==nil then
     error('No definition file specified.')
   end
@@ -342,16 +297,16 @@ function FtdiEepromInit:run(aParameters, tLog)
   end
 
   -- Get the USB vendor and product ID of the blank device.
-  local usUSBVendorBlank = tonumber(aParameters['usb_vendor_id_blank'])
-  local usUSBProductBlank = tonumber(aParameters['usb_product_id_blank'])
+  local usUSBVendorBlank = atParameter['usb_vendor_id_blank']:get()
+  local usUSBProductBlank = atParameter['usb_product_id_blank']:get()
 
-  local strMacGroupName = aParameters['group']
-  local ulManufacturer = tonumber(aParameters['manufacturer'])
-  local ulDeviceNr = tonumber(aParameters['devicenr'])
-  local ulSerial = tonumber(aParameters['serial'])
-  local ulHwRev = tonumber(aParameters['hwrev'])
-  local ulDeviceClass = tonumber(aParameters['deviceclass'])
-  local ulHwComp = tonumber(aParameters['hwcomp'])
+  local strMacGroupName = atParameter['group']:get()
+  local ulManufacturer = atParameter['manufacturer']:get()
+  local ulDeviceNr = atParameter['devicenr']:get()
+  local ulSerial = atParameter['serial']:get()
+  local ulHwRev = atParameter['hwrev']:get()
+  local ulDeviceClass = atParameter['deviceclass']:get()
+  local ulHwComp = atParameter['hwcomp']:get()
 
   local luaftdi = require 'luaftdi'
 
@@ -546,4 +501,4 @@ function FtdiEepromInit:run(aParameters, tLog)
   print("")
 end
 
-return FtdiEepromInit
+return TestClassFtdiEepromInit
