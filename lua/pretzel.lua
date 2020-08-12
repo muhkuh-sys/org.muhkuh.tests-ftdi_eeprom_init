@@ -131,7 +131,7 @@ function Pretzel:request(dev_par, cnt)
   if tResponse==nil then
     error('Failed to request a new FTDI serial.')
   else
-    local mac,size = string.match(tResponse, '\*(%x+),(%d+)')
+    local mac,size = string.match(tResponse, '%*(%x+),(%d+)')
     if not mac then
       print("Failed to query mac address!")
     elseif cnt~=tonumber(size) then
