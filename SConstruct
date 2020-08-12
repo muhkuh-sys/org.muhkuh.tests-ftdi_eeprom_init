@@ -36,8 +36,8 @@ import os.path
 # Build the artifacts.
 #
 
-strGroup = 'org.muhkuh.tests'
-strModule = 'ftdi_eeprom_init'
+strGroup = PROJECT_GROUP
+strModule = PROJECT_MODULE
 
 # Split the group by dots.
 aGroup = strGroup.split('.')
@@ -45,13 +45,13 @@ aGroup = strGroup.split('.')
 strModulePath = 'targets/jonchki/repository/%s/%s/%s' % ('/'.join(aGroup), strModule, PROJECT_VERSION)
 
 # Set the name of the artifact.
-strArtifact = 'lua5.1-ftdi_eeprom_init'
+strArtifact = 'ftdi_eeprom_init'
 
 tArcList = atEnv.DEFAULT.ArchiveList('zip')
 
 tArcList.AddFiles('',
-                  'installer/lua5.1/install.lua',
-                  'installer/lua5.1/install_testcase.lua')
+                  'installer/install.lua',
+                  'installer/install_testcase.lua')
 
 tArcList.AddFiles('lua/',
                   'lua/FtdiEepromInit.lua',
@@ -62,6 +62,6 @@ tArcList.AddFiles('templates/',
 
 tArtifact = atEnv.DEFAULT.Archive(os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION)), None, ARCHIVE_CONTENTS = tArcList)
 tArtifactHash = atEnv.DEFAULT.Hash('%s.hash' % tArtifact[0].get_path(), tArtifact[0].get_path(), HASH_ALGORITHM='md5,sha1,sha224,sha256,sha384,sha512', HASH_TEMPLATE='${ID_UC}:${HASH}\n')
-tConfiguration = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact, PROJECT_VERSION)), 'installer/lua5.1/%s.xml' % strModule)
+tConfiguration = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact, PROJECT_VERSION)), 'installer/%s.xml' % strModule)
 tConfigurationHash = atEnv.DEFAULT.Hash('%s.hash' % tConfiguration[0].get_path(), tConfiguration[0].get_path(), HASH_ALGORITHM='md5,sha1,sha224,sha256,sha384,sha512', HASH_TEMPLATE='${ID_UC}:${HASH}\n')
-tArtifactPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact, PROJECT_VERSION)), 'installer/lua5.1/pom.xml')
+tArtifactPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact, PROJECT_VERSION)), 'installer/pom.xml')
