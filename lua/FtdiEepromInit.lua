@@ -6,7 +6,80 @@ local TestClassFtdiEepromInit = class(TestClass)
 function TestClassFtdiEepromInit:_init(strTestName, uiTestCase, tLogWriter, strLogLevel)
   self:super(strTestName, uiTestCase, tLogWriter, strLogLevel)
 
+  local luaftdi = require 'luaftdi'
+  self.luaftdi = luaftdi
+
   self.lxp = require 'lxp'
+
+  -- Create a lookup table which translates the ASCII identifier to the index
+  -- used by libftdi.
+  local atKeysAsciiToNumber = {
+    ['VENDOR_ID'] = luaftdi.VENDOR_ID,
+    ['PRODUCT_ID'] = luaftdi.PRODUCT_ID,
+    ['SELF_POWERED'] = luaftdi.SELF_POWERED,
+    ['REMOTE_WAKEUP'] = luaftdi.REMOTE_WAKEUP,
+    ['IS_NOT_PNP'] = luaftdi.IS_NOT_PNP,
+    ['SUSPEND_DBUS7'] = luaftdi.SUSPEND_DBUS7,
+    ['IN_IS_ISOCHRONOUS'] = luaftdi.IN_IS_ISOCHRONOUS,
+    ['OUT_IS_ISOCHRONOUS'] = luaftdi.OUT_IS_ISOCHRONOUS,
+    ['SUSPEND_PULL_DOWNS'] = luaftdi.SUSPEND_PULL_DOWNS,
+    ['USE_SERIAL'] = luaftdi.USE_SERIAL,
+    ['USB_VERSION'] = luaftdi.USB_VERSION,
+    ['USE_USB_VERSION'] = luaftdi.USE_USB_VERSION,
+    ['MAX_POWER'] = luaftdi.MAX_POWER,
+    ['CHANNEL_A_TYPE'] = luaftdi.CHANNEL_A_TYPE,
+    ['CHANNEL_B_TYPE'] = luaftdi.CHANNEL_B_TYPE,
+    ['CHANNEL_A_DRIVER'] = luaftdi.CHANNEL_A_DRIVER,
+    ['CHANNEL_B_DRIVER'] = luaftdi.CHANNEL_B_DRIVER,
+    ['CBUS_FUNCTION_0'] = luaftdi.CBUS_FUNCTION_0,
+    ['CBUS_FUNCTION_1'] = luaftdi.CBUS_FUNCTION_1,
+    ['CBUS_FUNCTION_2'] = luaftdi.CBUS_FUNCTION_2,
+    ['CBUS_FUNCTION_3'] = luaftdi.CBUS_FUNCTION_3,
+    ['CBUS_FUNCTION_4'] = luaftdi.CBUS_FUNCTION_4,
+    ['CBUS_FUNCTION_5'] = luaftdi.CBUS_FUNCTION_5,
+    ['CBUS_FUNCTION_6'] = luaftdi.CBUS_FUNCTION_6,
+    ['CBUS_FUNCTION_7'] = luaftdi.CBUS_FUNCTION_7,
+    ['CBUS_FUNCTION_8'] = luaftdi.CBUS_FUNCTION_8,
+    ['CBUS_FUNCTION_9'] = luaftdi.CBUS_FUNCTION_9,
+    ['HIGH_CURRENT'] = luaftdi.HIGH_CURRENT,
+    ['HIGH_CURRENT_A'] = luaftdi.HIGH_CURRENT_A,
+    ['HIGH_CURRENT_B'] = luaftdi.HIGH_CURRENT_B,
+    ['INVERT'] = luaftdi.INVERT,
+    ['GROUP0_DRIVE'] = luaftdi.GROUP0_DRIVE,
+    ['GROUP0_SCHMITT'] = luaftdi.GROUP0_SCHMITT,
+    ['GROUP0_SLEW'] = luaftdi.GROUP0_SLEW,
+    ['GROUP1_DRIVE'] = luaftdi.GROUP1_DRIVE,
+    ['GROUP1_SCHMITT'] = luaftdi.GROUP1_SCHMITT,
+    ['GROUP1_SLEW'] = luaftdi.GROUP1_SLEW,
+    ['GROUP2_DRIVE'] = luaftdi.GROUP2_DRIVE,
+    ['GROUP2_SCHMITT'] = luaftdi.GROUP2_SCHMITT,
+    ['GROUP2_SLEW'] = luaftdi.GROUP2_SLEW,
+    ['GROUP3_DRIVE'] = luaftdi.GROUP3_DRIVE,
+    ['GROUP3_SCHMITT'] = luaftdi.GROUP3_SCHMITT,
+    ['GROUP3_SLEW'] = luaftdi.GROUP3_SLEW,
+    ['CHIP_SIZE'] = luaftdi.CHIP_SIZE,
+    ['CHIP_TYPE'] = luaftdi.CHIP_TYPE,
+    ['POWER_SAVE'] = luaftdi.POWER_SAVE,
+    ['CLOCK_POLARITY'] = luaftdi.CLOCK_POLARITY,
+    ['DATA_ORDER'] = luaftdi.DATA_ORDER,
+    ['FLOW_CONTROL'] = luaftdi.FLOW_CONTROL,
+    ['CHANNEL_C_DRIVER'] = luaftdi.CHANNEL_C_DRIVER,
+    ['CHANNEL_D_DRIVER'] = luaftdi.CHANNEL_D_DRIVER,
+    ['CHANNEL_A_RS485'] = luaftdi.CHANNEL_A_RS485,
+    ['CHANNEL_B_RS485'] = luaftdi.CHANNEL_B_RS485,
+    ['CHANNEL_C_RS485'] = luaftdi.CHANNEL_C_RS485,
+    ['CHANNEL_D_RS485'] = luaftdi.CHANNEL_D_RS485,
+    ['RELEASE_NUMBER'] = luaftdi.RELEASE_NUMBER,
+    ['EXTERNAL_OSCILLATOR'] = luaftdi.EXTERNAL_OSCILLATOR,
+    ['USER_DATA_ADDR'] = luaftdi.USER_DATA_ADDR
+  }
+  -- Create a reverse table to translate the libftdi index to the ASCII identifier.
+  local atKeysNumberToAscii = {}
+  for strKey, uiValue in pairs(atKeysAsciiToNumber) do
+    atKeysNumberToAscii[uiValue] = strKey
+  end
+  self.atKeysAsciiToNumber = atKeysAsciiToNumber
+  self.atKeysNumberToAscii = atKeysNumberToAscii
 
   local P = self.P
   self:__parameter {
@@ -166,7 +239,7 @@ end
 -- @param strFilename The path to the configuration file.
 -- @param tLog A lua-log object which can be used for log messages.
 -- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to translate them to numbers.
-function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog, atValidKeys)
+function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog)
   -- Be optimistic!
   local tResult = true
 
@@ -180,7 +253,7 @@ function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog, atValidK
     atSettings = {},
 
     tResult = true,
-    atValidKeys = atValidKeys,
+    atValidKeys = self.atKeysAsciiToNumber,
     tLog = tLog
   }
 
@@ -277,157 +350,61 @@ end
 
 
 
-function TestClassFtdiEepromInit:run()
-  local atParameter = self.atParameter
+function TestClassFtdiEepromInit:__verify_settings(tContext, tProgrammedDevice)
   local tLog = self.tLog
+  local fCompareResult = true
 
-  ----------------------------------------------------------------------
-  --
-  -- Parse the parameters and collect all options.
-  --
+  -- Open the programmed device.
+  tLog.debug('Open the programmed device.')
+  local tResult, strError = tContext:usb_open_dev(tProgrammedDevice)
+  assert(tResult, strError)
 
-  -- Parse the definition_file option.
-  local strDefinitionFile = atParameter['definition_file']:get()
-  if strDefinitionFile==nil then
-    error('No definition file specified.')
-  end
-  -- Does the file exist?
-  if self.pl.path.exists(strDefinitionFile)==nil then
-    error(string.format('Failed to open the definition file "%s".', strDefinitionFile))
-  end
+  -- Get the EEPROM object.
+  tLog.debug('Read the EEPROM.')
+  local tEeprom = tContext:eeprom()
+  assert(tEeprom, 'Failed to get the Eeprom object.')
 
-  -- Get the USB vendor and product ID of the blank device.
-  local usUSBVendorBlank = atParameter['usb_vendor_id_blank']:get()
-  local usUSBProductBlank = atParameter['usb_product_id_blank']:get()
+  -- Read the EEPROM.
+  tResult, strError = tEeprom:read()
+  assert(tResult, strError)
 
-  local strMacGroupName = atParameter['group']:get()
-  local ulManufacturer = atParameter['manufacturer']:get()
-  local ulDeviceNr = atParameter['devicenr']:get()
-  local ulSerial = atParameter['serial']:get()
-  local ulHwRev = atParameter['hwrev']:get()
-  local ulDeviceClass = atParameter['deviceclass']:get()
-  local ulHwComp = atParameter['hwcomp']:get()
-
-  local luaftdi = require 'luaftdi'
-
-  -- Create a lookup table which translates the ASCII identifier to the index
-  -- used by libftdi.
-  local atKeysAsciiToNumber = {
-    ['VENDOR_ID'] = luaftdi.VENDOR_ID,
-    ['PRODUCT_ID'] = luaftdi.PRODUCT_ID,
-    ['SELF_POWERED'] = luaftdi.SELF_POWERED,
-    ['REMOTE_WAKEUP'] = luaftdi.REMOTE_WAKEUP,
-    ['IS_NOT_PNP'] = luaftdi.IS_NOT_PNP,
-    ['SUSPEND_DBUS7'] = luaftdi.SUSPEND_DBUS7,
-    ['IN_IS_ISOCHRONOUS'] = luaftdi.IN_IS_ISOCHRONOUS,
-    ['OUT_IS_ISOCHRONOUS'] = luaftdi.OUT_IS_ISOCHRONOUS,
-    ['SUSPEND_PULL_DOWNS'] = luaftdi.SUSPEND_PULL_DOWNS,
-    ['USE_SERIAL'] = luaftdi.USE_SERIAL,
-    ['USB_VERSION'] = luaftdi.USB_VERSION,
-    ['USE_USB_VERSION'] = luaftdi.USE_USB_VERSION,
-    ['MAX_POWER'] = luaftdi.MAX_POWER,
-    ['CHANNEL_A_TYPE'] = luaftdi.CHANNEL_A_TYPE,
-    ['CHANNEL_B_TYPE'] = luaftdi.CHANNEL_B_TYPE,
-    ['CHANNEL_A_DRIVER'] = luaftdi.CHANNEL_A_DRIVER,
-    ['CHANNEL_B_DRIVER'] = luaftdi.CHANNEL_B_DRIVER,
-    ['CBUS_FUNCTION_0'] = luaftdi.CBUS_FUNCTION_0,
-    ['CBUS_FUNCTION_1'] = luaftdi.CBUS_FUNCTION_1,
-    ['CBUS_FUNCTION_2'] = luaftdi.CBUS_FUNCTION_2,
-    ['CBUS_FUNCTION_3'] = luaftdi.CBUS_FUNCTION_3,
-    ['CBUS_FUNCTION_4'] = luaftdi.CBUS_FUNCTION_4,
-    ['CBUS_FUNCTION_5'] = luaftdi.CBUS_FUNCTION_5,
-    ['CBUS_FUNCTION_6'] = luaftdi.CBUS_FUNCTION_6,
-    ['CBUS_FUNCTION_7'] = luaftdi.CBUS_FUNCTION_7,
-    ['CBUS_FUNCTION_8'] = luaftdi.CBUS_FUNCTION_8,
-    ['CBUS_FUNCTION_9'] = luaftdi.CBUS_FUNCTION_9,
-    ['HIGH_CURRENT'] = luaftdi.HIGH_CURRENT,
-    ['HIGH_CURRENT_A'] = luaftdi.HIGH_CURRENT_A,
-    ['HIGH_CURRENT_B'] = luaftdi.HIGH_CURRENT_B,
-    ['INVERT'] = luaftdi.INVERT,
-    ['GROUP0_DRIVE'] = luaftdi.GROUP0_DRIVE,
-    ['GROUP0_SCHMITT'] = luaftdi.GROUP0_SCHMITT,
-    ['GROUP0_SLEW'] = luaftdi.GROUP0_SLEW,
-    ['GROUP1_DRIVE'] = luaftdi.GROUP1_DRIVE,
-    ['GROUP1_SCHMITT'] = luaftdi.GROUP1_SCHMITT,
-    ['GROUP1_SLEW'] = luaftdi.GROUP1_SLEW,
-    ['GROUP2_DRIVE'] = luaftdi.GROUP2_DRIVE,
-    ['GROUP2_SCHMITT'] = luaftdi.GROUP2_SCHMITT,
-    ['GROUP2_SLEW'] = luaftdi.GROUP2_SLEW,
-    ['GROUP3_DRIVE'] = luaftdi.GROUP3_DRIVE,
-    ['GROUP3_SCHMITT'] = luaftdi.GROUP3_SCHMITT,
-    ['GROUP3_SLEW'] = luaftdi.GROUP3_SLEW,
-    ['CHIP_SIZE'] = luaftdi.CHIP_SIZE,
-    ['CHIP_TYPE'] = luaftdi.CHIP_TYPE,
-    ['POWER_SAVE'] = luaftdi.POWER_SAVE,
-    ['CLOCK_POLARITY'] = luaftdi.CLOCK_POLARITY,
-    ['DATA_ORDER'] = luaftdi.DATA_ORDER,
-    ['FLOW_CONTROL'] = luaftdi.FLOW_CONTROL,
-    ['CHANNEL_C_DRIVER'] = luaftdi.CHANNEL_C_DRIVER,
-    ['CHANNEL_D_DRIVER'] = luaftdi.CHANNEL_D_DRIVER,
-    ['CHANNEL_A_RS485'] = luaftdi.CHANNEL_A_RS485,
-    ['CHANNEL_B_RS485'] = luaftdi.CHANNEL_B_RS485,
-    ['CHANNEL_C_RS485'] = luaftdi.CHANNEL_C_RS485,
-    ['CHANNEL_D_RS485'] = luaftdi.CHANNEL_D_RS485,
-    ['RELEASE_NUMBER'] = luaftdi.RELEASE_NUMBER,
-    ['EXTERNAL_OSCILLATOR'] = luaftdi.EXTERNAL_OSCILLATOR,
-    ['USER_DATA_ADDR'] = luaftdi.USER_DATA_ADDR
+  local atVerifyBlacklist = {
   }
-  -- Create a reverse table to translate the libftdi index to the ASCII identifier.
-  local atKeysNumberToAscii = {}
-  for strKey, uiValue in pairs(atKeysAsciiToNumber) do
-    atKeysNumberToAscii[uiValue] = strKey
-  end
 
-  -- Read the definition file.
-  local tResult = self:parse_configuration(strDefinitionFile, tLog, atKeysAsciiToNumber)
-  if tResult==nil then
-    error('Failed to parse the configuration file.')
-  end
-
-  -- Show the settings from the configuration file.
-  tLog.debug('Vendor:  "%s"', self.strVendor)
-  tLog.debug('Product: "%s"', self.strProduct)
+  -- Verify all values from the configuration file except a few blacklisted fields.
   for uiKey, uiValue in pairs(self.atSettings) do
-    local strKey = atKeysNumberToAscii[uiKey]
-    tLog.debug('  %s = %d (0x%08x)', strKey, uiValue, uiValue)
-  end
+    -- Is the key in the blacklist?
+    if atVerifyBlacklist[uiKey]~=nil then
+      -- No, the key is not blacklisted.
 
+      -- Get the value.
+      tEepromValue, strError = tEeprom:get_value(uiKey)
+      if tEepromValue==nil then
+        tLog.error('Failed to get the value "%s": %s', tostring(uiKey), strError)
+        error('Failed to get the value.')
+      end
 
-  -- Create a new FTDI context.
-  local tContext = luaftdi.Context()
-
-  -- Scan for all blank devices with the requested VID and PID.
-  tLog.debug('Looking for blank USB devices with VID=0x%04x and PID=0x%04x.', usUSBVendorBlank, usUSBProductBlank)
-  local tList = tContext:usb_find_all(usUSBVendorBlank, usUSBProductBlank)
-
-  -- Filter the device list with the product and serial string.
-  local ulDeviceCnt = 0
-  local atFilteredDevices = {}
-  for tListEntry in tList:iter() do
-    -- Get the strings. This fails if the EEPROM is empty.
-    local strManufacturer = tListEntry:get_manufacturer()
-    local strProduct = tListEntry:get_description()
-    local strSerial = tListEntry:get_serial()
-    if strManufacturer==nil and strProduct==nil and strSerial==nil then
-      table.insert(atFilteredDevices, tListEntry)
-    else
-      tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+      -- Is the value the same?
+      if uiValue==tEepromValue then
+        tLog.debug('The value for "%s" matches.', tostring(uiKey))
+      else
+        tLog.error('The values for "%s" differ: definition="%s", eeprom="%s"', tostring(uiKey), tostring(uiValue), tostring(tEepromValue))
+        fCompareResult = false
+      end
     end
   end
 
-  -- There must be only 1 blank device available.
-  local ulDeviceCnt = table.maxn(atFilteredDevices)
-  tLog.info('Found %d matching blank devices.', ulDeviceCnt)
-  if ulDeviceCnt==0 then
-    error('No matching blank FTDI device found.')
-  end
-  if ulDeviceCnt>1 then
-    error('More than 1 matching blank FTDI found.')
-  end
+  return fCompareResult
+end
+
+
+
+function TestClassFtdiEepromInit:__program_blank_device(tContext, tBlankDevice)
+  local tLog = self.tLog
 
   -- Open the blank device.
   tLog.debug('Open the blank device.')
-  local tResult, strError = tContext:usb_open_dev(atFilteredDevices[1])
+  local tResult, strError = tContext:usb_open_dev(tBlankDevice)
   assert(tResult, strError)
 
   -- Get the EEPROM object.
@@ -498,6 +475,131 @@ function TestClassFtdiEepromInit:run()
   -- Try to reset the device in the OS so that it appears with the new values.
   tResult, strError = tContext:usb_reset_device()
   tLog.debug('usb_reset_device returned %s, %s', tostring(tResult), tostring(strError))
+end
+
+
+
+function TestClassFtdiEepromInit:run()
+  local atParameter = self.atParameter
+  local tLog = self.tLog
+  local atKeysNumberToAscii = self.atKeysNumberToAscii
+
+  ----------------------------------------------------------------------
+  --
+  -- Parse the parameters and collect all options.
+  --
+
+  -- Parse the definition_file option.
+  local strDefinitionFile = atParameter['definition_file']:get()
+  if strDefinitionFile==nil then
+    error('No definition file specified.')
+  end
+  -- Does the file exist?
+  if self.pl.path.exists(strDefinitionFile)==nil then
+    error(string.format('Failed to open the definition file "%s".', strDefinitionFile))
+  end
+
+  -- Get the USB vendor and product ID of the blank device.
+  local usUSBVendorBlank = atParameter['usb_vendor_id_blank']:get()
+  local usUSBProductBlank = atParameter['usb_product_id_blank']:get()
+
+  local strMacGroupName = atParameter['group']:get()
+  local ulManufacturer = atParameter['manufacturer']:get()
+  local ulDeviceNr = atParameter['devicenr']:get()
+  local ulSerial = atParameter['serial']:get()
+  local ulHwRev = atParameter['hwrev']:get()
+  local ulDeviceClass = atParameter['deviceclass']:get()
+  local ulHwComp = atParameter['hwcomp']:get()
+
+  local luaftdi = require 'luaftdi'
+
+
+  -- Read the definition file.
+  local tResult = self:parse_configuration(strDefinitionFile, tLog)
+  if tResult==nil then
+    error('Failed to parse the configuration file.')
+  end
+
+  -- Show the settings from the configuration file.
+  tLog.debug('Vendor:  "%s"', self.strVendor)
+  tLog.debug('Product: "%s"', self.strProduct)
+  for uiKey, uiValue in pairs(self.atSettings) do
+    local strKey = atKeysNumberToAscii[uiKey]
+    tLog.debug('  %s = %d (0x%08x)', strKey, uiValue, uiValue)
+  end
+
+
+  -- Create a new FTDI context.
+  local tContext = luaftdi.Context()
+
+  -- Scan for all blank devices with the requested VID and PID.
+  tLog.debug('Looking for blank USB devices with VID=0x%04x and PID=0x%04x.', usUSBVendorBlank, usUSBProductBlank)
+  local tList = tContext:usb_find_all(usUSBVendorBlank, usUSBProductBlank)
+
+  -- Filter the device list with the product and serial string.
+  local atBlankDevices = {}
+  for tListEntry in tList:iter() do
+    -- Get the strings. This fails if the EEPROM is empty.
+    local strManufacturer = tListEntry:get_manufacturer()
+    local strProduct = tListEntry:get_description()
+    local strSerial = tListEntry:get_serial()
+    if strManufacturer==nil and strProduct==nil and strSerial==nil then
+      table.insert(atBlankDevices, tListEntry)
+    else
+      tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+    end
+  end
+
+  -- There must be only 1 blank device available.
+  local ulBlankDeviceCnt = #atBlankDevices
+  tLog.info('Found %d matching blank devices.', ulBlankDeviceCnt)
+  if ulBlankDeviceCnt==0 then
+    tLog.info('No matching blank FTDI device found. Now looking for programmed devices.')
+
+    self.pl.pretty.dump(self.atSettings)
+    local usUSBVendorProgrammed = self.atSettings[luaftdi.VENDOR_ID]
+    local usUSBProductProgrammed = self.atSettings[luaftdi.PRODUCT_ID]
+    tLog.debug('Looking for programmed USB devices with VID=0x%04x and PID=0x%04x.', usUSBVendorProgrammed, usUSBProductProgrammed)
+    local tListProgrammed = tContext:usb_find_all(usUSBVendorProgrammed, usUSBProductProgrammed)
+
+    local atProgrammedDevices = {}
+    for tListEntry in tListProgrammed:iter() do
+      -- Get the strings. This fails if the EEPROM is empty.
+      local strManufacturer = tListEntry:get_manufacturer()
+      local strProduct = tListEntry:get_description()
+      if strManufacturer==self.strVendor and strProduct==self.strProduct then
+        table.insert(atProgrammedDevices, tListEntry)
+      else
+        tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+      end
+    end
+
+    local ulProgrammedDeviceCnt = #atProgrammedDevices
+    tLog.info('Found %d matching programmed devices.', ulProgrammedDeviceCnt)
+    if ulProgrammedDeviceCnt==0 then
+      tLog.error('No blank and no programmed device found.')
+      error('No blank and no programmed device found.')
+
+    elseif ulProgrammedDeviceCnt==1 then
+      local fResult = self:__verify_settings(tContext, atProgrammedDevices[1])
+      if fResult==true then
+        tLog.info('All values match. Found a programmed device.')
+      else
+        tLog.error('The programmed device differs from the definition. This is something else.')
+        error('The programmed device differs from the definition. This is something else.')
+      end
+
+    else
+      tLog.error('No blank device and more than one programmed device found.')
+      error('No blank device and more than one programmed device found.')
+    end
+
+  elseif ulBlankDeviceCnt==1 then
+    self:__program_blank_device(tContext, atBlankDevices[1])
+
+  else
+    error('More than 1 matching blank FTDI found.')
+  end
 
   -- Close the FTDI context.
   tContext:usb_close()
