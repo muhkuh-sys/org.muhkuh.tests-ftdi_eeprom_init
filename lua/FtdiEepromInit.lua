@@ -192,7 +192,7 @@ function TestClassFtdiEepromInit.parseCfg_StartElement(tParser, strName, atAttri
 
         else
           -- Convert the value to a number.
-          ulValue = tonumber(strValue)
+          local ulValue = tonumber(strValue)
           if ulValue==nil then
             aLxpAttr.tResult = nil
             aLxpAttr.tLog.error('Error in line %d, col %d: the value "%s" can not be converted to a number.', iPosLine, iPosColumn, strValue)
@@ -314,7 +314,7 @@ function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
   elseif #tBoardInfo == 1 then
     local tAttr = tBoardInfo[1]
     local strMac = tAttr.mac
-    strMac1, strMac2, strMac3, strMac4, strMac5, strMac6 = string.match(strMac, '(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)')
+    local strMac1, strMac2, strMac3, strMac4, strMac5, strMac6 = string.match(strMac, '(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)')
     aucMac = {
       tonumber(strMac1, 16),
       tonumber(strMac2, 16),
@@ -378,9 +378,9 @@ function TestClassFtdiEepromInit:__verify_settings(tContext, tProgrammedDevice)
       -- No, the key is not blacklisted.
 
       -- Get the value.
-      tEepromValue, strError = tEeprom:get_value(uiKey)
+      local tEepromValue, strEepromError = tEeprom:get_value(uiKey)
       if tEepromValue==nil then
-        tLog.error('Failed to get the value "%s": %s', tostring(uiKey), strError)
+        tLog.error('Failed to get the value "%s": %s', tostring(uiKey), strEepromError)
         error('Failed to get the value.')
       end
 
@@ -399,7 +399,8 @@ end
 
 
 
-function TestClassFtdiEepromInit:__program_blank_device(tContext, tBlankDevice)
+function TestClassFtdiEepromInit:__program_blank_device(tContext, tBlankDevice, atPretzelAttr)
+  local luaftdi = self.luaftdi
   local tLog = self.tLog
 
   -- Open the blank device.
@@ -426,29 +427,7 @@ function TestClassFtdiEepromInit:__program_blank_device(tContext, tBlankDevice)
   end
   tLog.info('The EEPROM is empty.')
 
-
-  -- Get the production date.
-  local date = require 'date'
-  -- Get the local time.
-  local tDateNow = date(false)
-  -- Get the lower 2 digits of the year.
-  local ulYear = tDateNow:getisoyear() % 100
-  -- Get the week number.
-  local ulWeek = tDateNow:getweeknumber()
-  local usProductionDate = ulYear*256 + ulWeek
-
-  local atAttr = {
-    group = strMacGroupName,
-    manufacturer = ulManufacturer,
-    devicenr = ulDeviceNr,
-    serialnr = ulSerial,
-    hwrev = ulHwRev,
-    productiondate = usProductionDate,
-    deviceclass = ulDeviceClass,
-    hwcompaibility = ulHwComp
-  }
-
-  local strFTDISerial = self:__get_serial(atAttr, tLog)
+  local strFTDISerial = self:__get_serial(atPretzelAttr, tLog)
 
   -- Create a new EEPROM structure.
   tResult, strError = tEeprom:initdefaults(self.strVendor, self.strProduct, strFTDISerial)
@@ -567,6 +546,7 @@ function TestClassFtdiEepromInit:run()
       -- Get the strings. This fails if the EEPROM is empty.
       local strManufacturer = tListEntry:get_manufacturer()
       local strProduct = tListEntry:get_description()
+      local strSerial = tListEntry:get_serial()
       if strManufacturer==self.strVendor and strProduct==self.strProduct then
         table.insert(atProgrammedDevices, tListEntry)
       else
@@ -595,7 +575,28 @@ function TestClassFtdiEepromInit:run()
     end
 
   elseif ulBlankDeviceCnt==1 then
-    self:__program_blank_device(tContext, atBlankDevices[1])
+    -- Get the production date.
+    local date = require 'date'
+    -- Get the local time.
+    local tDateNow = date(false)
+    -- Get the lower 2 digits of the year.
+    local ulYear = tDateNow:getisoyear() % 100
+    -- Get the week number.
+    local ulWeek = tDateNow:getweeknumber()
+    local usProductionDate = ulYear*256 + ulWeek
+
+    local atPretzelAttr = {
+      group = strMacGroupName,
+      manufacturer = ulManufacturer,
+      devicenr = ulDeviceNr,
+      serialnr = ulSerial,
+      hwrev = ulHwRev,
+      productiondate = usProductionDate,
+      deviceclass = ulDeviceClass,
+      hwcompaibility = ulHwComp
+    }
+
+    self:__program_blank_device(tContext, atBlankDevices[1], atPretzelAttr)
 
   else
     error('More than 1 matching blank FTDI found.')
