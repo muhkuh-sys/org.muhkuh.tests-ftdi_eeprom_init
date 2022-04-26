@@ -13,15 +13,11 @@
 		</description>
 	</info>
 	<dependencies>
-		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.4-luaftdi" version="1.1"/>
-		<!-- lua-curlv3 and luasql are needed for the embedded pretzel -->
-		<dependency group="com.github.lua-curl" module="lua-curlv3" artifact="lua5.4-lua-curlv3" version="0.3"/>
-		<dependency group="com.github.keplerproject" module="luasql" artifact="lua5.4-luasql-mysql" version="2.5"/>
+		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.4-luaftdi" version="1"/>
+		<dependency group="org.muhkuh.lua" module="pretzel" artifact="pretzel" version="0"/>
 	</dependencies>
 	<dependencies>
-		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1.1"/>
-		<!-- lua-curlv3 and luasql are needed for the embedded pretzel -->
-		<dependency group="com.github.lua-curl" module="lua-curlv3" artifact="lua5.1-lua-curlv3" version="0.3"/>
-		<dependency group="com.github.keplerproject" module="luasql" artifact="lua5.1-luasql-mysql" version="2.5"/>
+		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1"/>
+		<dependency group="org.muhkuh.lua" module="pretzel" artifact="pretzel" version="0"/>
 	</dependencies>
 </jonchki-artifact>

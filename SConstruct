@@ -54,8 +54,7 @@ tArcList.AddFiles('',
                   'installer/install_testcase.lua')
 
 tArcList.AddFiles('lua/',
-                  'lua/FtdiEepromInit.lua',
-                  'lua/pretzel.lua')
+                  'lua/FtdiEepromInit.lua')
 
 tArcList.AddFiles('templates/',
                   'templates/test.lua')
