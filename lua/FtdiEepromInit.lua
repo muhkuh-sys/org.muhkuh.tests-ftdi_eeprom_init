@@ -270,7 +270,9 @@ function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog)
   local strXmlText, strError = self.pl.utils.readfile(strFilename, false)
   if strXmlText==nil then
     tResult = nil
-    tLog.error('Error reading the file: %s', strError)
+    local strMsg = string.format('Error reading the file: %s', strError)
+    tLog.error(strMsg)
+    error(strMsg)
   else
     local tParseResult, strMsg, uiLine, uiCol, uiPos = tParser:parse(strXmlText)
     if tParseResult~=nil then
@@ -280,7 +282,9 @@ function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog)
 
     if tParseResult==nil then
       tResult = nil
-      tLog.error("%s: %d,%d,%d", strMsg, uiLine, uiCol, uiPos)
+      local strMsg = string.format("%s: %d,%d,%d", strMsg, uiLine, uiCol, uiPos)
+      tLog.error(strMsg)
+      error(strMsg)
     elseif aLxpAttr.tResult==nil then
       tResult = nil
     else
@@ -302,8 +306,7 @@ function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
   local tBoardInfo = pretzel:get_board_info(atAttr.group, atAttr.manufacturer, atAttr.devicenr, atAttr.serialnr)
   if tBoardInfo==nil then
     tLog.error('Failed to search for the board.')
-  end
-  if #tBoardInfo == 0 then
+  elseif #tBoardInfo == 0 then
     tLog.info('No assigned FTDI serial number found. Request a new one.')
 
     aucMac = pretzel:request(atAttr, 1)
@@ -338,12 +341,14 @@ function TestClassFtdiEepromInit:__get_serial(atAttr, tLog)
 
   local aucMac = self:__get_mac(atAttr, tLog)
   if aucMac==nil then
-    tLog.error('Failed to get a pseudo MAC for the board. The serial can not be generated.')
-  else
-    -- Create a 6 digit serial from the pseudo mac.
-    strSerial = string.format('HXD%02X%02X%02X', aucMac[4], aucMac[5], aucMac[6])
-    tLog.info('Using serial number %s.', strSerial)
+    local strMsg = ('Failed to get a pseudo MAC for the board. The serial can not be generated.')
+    tLog.error(strMsg)
+    error(strMsg)
   end
+
+  -- Create a 6 digit serial from the pseudo mac.
+  strSerial = string.format('HXD%02X%02X%02X', aucMac[4], aucMac[5], aucMac[6])
+  tLog.info('Using serial number %s.', strSerial)
 
   return strSerial
 end
