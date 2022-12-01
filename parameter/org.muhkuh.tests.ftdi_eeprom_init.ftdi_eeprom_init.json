@@ -1,0 +1,68 @@
+{
+  "$schema" : "./schema/parameter.schema.json",
+
+  "parameter": [
+    {
+      "ID": "definition_file",
+      "description": "This is the name of the file holding the EEPROM definition.",
+      "required": "true"
+    },
+
+    {
+      "ID": "usb_vendor_id_blank",
+      "description": "The USB vendor ID of the blank device.",
+      "default": "0x0403",
+      "required": "true"
+    },
+
+    {
+      "ID": "usb_product_id_blank",
+      "description": "The USB product ID of the blank device.",
+      "default": "0x6010",
+      "required": "true"
+    },
+
+    {
+      "ID": "group",
+      "description": "The MAC group for the FTDI IDs.",
+      "default": "testgroup1",
+      "required": "true"
+    },
+
+    {
+      "ID": "manufacturer",
+      "description": "The manufacturer ID of the board.",
+      "required": "true"
+    },
+
+    {
+      "ID": "devicenr",
+      "description": "The device number of the board.",
+      "required": "true"
+    },
+
+    {
+      "ID": "serial",
+      "description": "The serial number of the board.",
+      "required": "true"
+    },
+
+    {
+      "ID": "hwrev",
+      "description": "The hardware revision of the board.",
+      "required": "true"
+    },
+
+    {
+      "ID": "deviceclass",
+      "description": "The device class of the board.",
+      "required": "true"
+    },
+
+    {
+      "ID": "hwcomp",
+      "description": "The hardware compatibility of the board.",
+      "required": "true"
+    }
+  ]
+}

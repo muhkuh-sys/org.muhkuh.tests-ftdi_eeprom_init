@@ -56,6 +56,9 @@ tArcList.AddFiles('',
 tArcList.AddFiles('lua/',
                   'lua/FtdiEepromInit.lua')
 
+tArcList.AddFiles('parameter/',
+                  'parameter/org.muhkuh.tests.ftdi_eeprom_init.ftdi_eeprom_init.json')
+
 tArcList.AddFiles('templates/',
                   'templates/test.lua')
 
