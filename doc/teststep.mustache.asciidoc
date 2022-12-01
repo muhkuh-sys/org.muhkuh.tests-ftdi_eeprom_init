@@ -1,0 +1,28 @@
+The test step {{name}} programs the EEPROM connected to an FDTI device. It uses the values from the definition in the file `{{parameter.definition_file}}`.
+It expects an FTDI with a blank EEPROM or an already programmed EEPROM.
+
+### Details
+
+First the test step looks for a USB device with a vendor ID of `{{#hex4}}{{parameter.usb_vendor_id_blank}}{{/hex4}}` and a product ID of `{{#hex4}}{{parameter.usb_product_id_blank}}{{/hex4}}`.
+This is an FDTI with a blank EEPRPOM. If exactly one blank device was found, the values from the definition are written to the EEPROM. A unique serial number is requested from the
+group {{parameter.group}} on the MAC server and connected to the following data:
+
+.Attributes in the MAC database
+|===
+| name           | value
+
+| manufacturer   | `{{parameter.manufacturer}}`
+| devicenr       | `{{parameter.devicenr}}`
+| serialnr       | The running serial number.
+| hwrev          | `{{parameter.hwrev}}`
+| productiondate | The current production date.
+| deviceclass    | `{{#hex4}}{{parameter.deviceclass}}{{/hex4}}`
+| hwcompaibility | `{{parameter.hwcomp}}`
+|===
+
+The serial number is also written to the EEPROM. Then the device is restarted to apply the values.
+If more than one device is found which matches the vendor and product ID, the test step stops with an error. In this case it is not possible to identify the device to be programmed.
+
+If no blank device is found, the test step looks for a device with the vendor and product ID from the definition file. This is an already programmed device.
+If the test step finds no or more than one programmed device, it exits with an error. If it finds exactly one device, it reads the EEPROM and compares the contents with the definitions from the file.
+If one or more values differ, the test step throws an error. If all values match, the test step ist ok.
