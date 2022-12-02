@@ -1,28 +1,41 @@
-The test step {{name}} programs the EEPROM connected to an FDTI device. It uses the values from the definition in the file `{{parameter.definition_file}}`.
+The test step {{name}} programs the EEPROM connected to an FDTI device. It uses the values from the definition in the file `{{parameter.definition_file.value}}`.
 It expects an FTDI with a blank EEPROM or an already programmed EEPROM.
 
-### Details
+# Overview
 
-First the test step looks for a USB device with a vendor ID of `{{#hex4}}{{parameter.usb_vendor_id_blank}}{{/hex4}}` and a product ID of `{{#hex4}}{{parameter.usb_product_id_blank}}{{/hex4}}`.
-This is an FDTI with a blank EEPRPOM. If exactly one blank device was found, the values from the definition are written to the EEPROM. A unique serial number is requested from the
-group {{parameter.group}} on the MAC server and connected to the following data:
+image::test_flow.svg[Embedded,opts=inline]
+
+# Details
+
+First the test step looks for an FTDI device with a blank EEPROM. It is identified by its USB vendor and device ID.
+
+.USB vendor and device ID for a blank EEPROM
+|===
+| ID        | value
+
+| vendor    | {{#if}}{{parameter.usb_vendor_id_blank.type~='connection'}}`{{parameter.usb_vendor_id_blank.value}}`{{/if}}{{#if}}{{parameter.usb_vendor_id_blank.type=='connection'}}connection to `{{parameter.usb_vendor_id_blank.value}}`{{/if}}
+| device    | {{#if}}{{parameter.usb_product_id_blank.type~='connection'}}`{{parameter.usb_product_id_blank.value}}`{{/if}}{{#if}}{{parameter.usb_product_id_blank.type=='connection'}}connection to `{{parameter.usb_product_id_blank.value}}`{{/if}}
+|===
+
+If exactly one blank device was found, the values from the definition are written to the EEPROM. A unique serial number is requested from the
+group `{{parameter.group.value}}` on the MAC server and connected to the following data:
 
 .Attributes in the MAC database
 |===
 | name           | value
 
-| manufacturer   | `{{parameter.manufacturer}}`
-| devicenr       | `{{parameter.devicenr}}`
-| serialnr       | The running serial number.
-| hwrev          | `{{parameter.hwrev}}`
-| productiondate | The current production date.
-| deviceclass    | `{{#hex4}}{{parameter.deviceclass}}{{/hex4}}`
-| hwcompaibility | `{{parameter.hwcomp}}`
+| manufacturer   | {{#if}}{{parameter.manufacturer.type~='connection'}}`{{parameter.manufacturer.value}}`{{/if}}{{#if}}{{parameter.manufacturer.type=='connection'}}connection to `{{parameter.manufacturer.value}}`{{/if}}
+| devicenr       | {{#if}}{{parameter.devicenr.type~='connection'}}`{{parameter.devicenr.value}}`{{/if}}{{#if}}{{parameter.devicenr.type=='connection'}}connection to `{{parameter.devicenr.value}}`{{/if}}
+| serialnr       | {{#if}}{{parameter.serial.type~='connection'}}`{{parameter.serial.value}}`{{/if}}{{#if}}{{parameter.serial.type=='connection'}}connection to `{{parameter.serial.value}}`{{/if}}
+| hwrev          | {{#if}}{{parameter.hwrev.type~='connection'}}`{{parameter.hwrev.value}}`{{/if}}{{#if}}{{parameter.hwrev.type=='connection'}}connection to `{{parameter.hwrev.value}}`{{/if}}
+| productiondate | The current year and week.
+| deviceclass    | {{#if}}{{parameter.deviceclass.type~='connection'}}`{{parameter.deviceclass.value}}`{{/if}}{{#if}}{{parameter.deviceclass.type=='connection'}}connection to `{{parameter.deviceclass.value}}`{{/if}}
+| hwcompaibility | {{#if}}{{parameter.hwcomp.type~='connection'}}`{{parameter.hwcomp.value}}`{{/if}}{{#if}}{{parameter.hwcomp.type=='connection'}}connection to `{{parameter.hwcomp.value}}`{{/if}}
 |===
 
-The serial number is also written to the EEPROM. Then the device is restarted to apply the values.
-If more than one device is found which matches the vendor and product ID, the test step stops with an error. In this case it is not possible to identify the device to be programmed.
+The serial number is also written to the EEPROM. Then the FTDI device is restarted to apply the values.
+If more than one USB device is found which matches the vendor and product ID, the test step stops with an error. In this case it is not possible to identify the device to be programmed.
 
-If no blank device is found, the test step looks for a device with the vendor and product ID from the definition file. This is an already programmed device.
+If no blank device is found, the test step looks for a device with the vendor and product ID from the definition file. Both values are defined in the definition file `{{parameter.definition_file.value}}`. This is an already programmed device.
 If the test step finds no or more than one programmed device, it exits with an error. If it finds exactly one device, it reads the EEPROM and compares the contents with the definitions from the file.
 If one or more values differ, the test step throws an error. If all values match, the test step ist ok.
