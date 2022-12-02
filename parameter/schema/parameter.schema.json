@@ -8,7 +8,7 @@
             "items" : {
                 "additionalProperties" : false,
                 "properties" : {
-                    "ID": {
+                    "name": {
                         "type": "string"
                     },
                     "description": {
@@ -23,7 +23,7 @@
                     }
                 },
                 "required" : [
-                    "ID",
+                    "name",
                     "description"
                 ],
                 "type" : "object"

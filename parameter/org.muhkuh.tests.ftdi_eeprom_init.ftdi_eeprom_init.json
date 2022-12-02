@@ -3,64 +3,64 @@
 
   "parameter": [
     {
-      "ID": "definition_file",
+      "name": "definition_file",
       "description": "This is the name of the file holding the EEPROM definition.",
       "required": "true"
     },
 
     {
-      "ID": "usb_vendor_id_blank",
+      "name": "usb_vendor_id_blank",
       "description": "The USB vendor ID of the blank device.",
       "default": "0x0403",
       "required": "true"
     },
 
     {
-      "ID": "usb_product_id_blank",
+      "name": "usb_product_id_blank",
       "description": "The USB product ID of the blank device.",
       "default": "0x6010",
       "required": "true"
     },
 
     {
-      "ID": "group",
+      "name": "group",
       "description": "The MAC group for the FTDI IDs.",
       "default": "testgroup1",
       "required": "true"
     },
 
     {
-      "ID": "manufacturer",
+      "name": "manufacturer",
       "description": "The manufacturer ID of the board.",
       "required": "true"
     },
 
     {
-      "ID": "devicenr",
+      "name": "devicenr",
       "description": "The device number of the board.",
       "required": "true"
     },
 
     {
-      "ID": "serial",
+      "name": "serial",
       "description": "The serial number of the board.",
       "required": "true"
     },
 
     {
-      "ID": "hwrev",
+      "name": "hwrev",
       "description": "The hardware revision of the board.",
       "required": "true"
     },
 
     {
-      "ID": "deviceclass",
+      "name": "deviceclass",
       "description": "The device class of the board.",
       "required": "true"
     },
 
     {
-      "ID": "hwcomp",
+      "name": "hwcomp",
       "description": "The hardware compatibility of the board.",
       "required": "true"
     }
