@@ -63,7 +63,7 @@ tArcList.AddFiles('templates/',
                   'templates/test.lua')
 
 tArcList.AddFiles('doc/',
-                  'doc/test_flow.svg',
+                  'doc/test_flow.gv',
                   'doc/teststep.mustache.asciidoc')
 
 tArtifact = atEnv.DEFAULT.Archive(os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION)), None, ARCHIVE_CONTENTS = tArcList)

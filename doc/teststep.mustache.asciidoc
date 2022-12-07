@@ -3,7 +3,10 @@ It expects an FTDI with a blank EEPROM or an already programmed EEPROM.
 
 # Overview
 
-image::test_flow.svg[Embedded,opts=inline]
+[graphviz,format="svg"]
+....
+include::test_flow.gv[]
+....
 
 # Details
 

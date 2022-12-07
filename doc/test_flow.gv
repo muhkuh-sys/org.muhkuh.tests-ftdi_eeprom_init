@@ -1,0 +1,215 @@
+# Place the cursor inside "graph" to get some refactoring options
+
+digraph {
+start [
+    shape = box,
+    style = "rounded",
+    label = "FTDI EEPROM\nInit"
+]
+start -> if0 []
+if0 [
+    shape = diamond,
+    label = "Blank Device\npresent"
+]
+if0 -> if1 [
+    label ="Yes",
+    decorate = true
+]
+if0 -> if2 [
+    label = "No",
+    decorate = true
+]
+
+if1 [
+    shape = diamond,
+    label = "Exactly one?"
+]
+
+if2 [
+    shape = diamond,
+    label = "Programmed\nDevice\npresent?"
+]
+if2 -> err0 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+err0 [
+    shape = box,
+    label = "Error\nNo device found.",
+    style = "filled",
+    fillcolor = "red"
+]
+
+if3 [
+    shape = diamond,
+    label = "Exactly one?"
+]
+if2 -> if3 [
+    label = "Yes",
+    decorate = true
+]
+
+state0 [
+    shape = box,
+    label = "Get previously\nassigned MAC.",
+    style = "filled",
+    fillcolor = "yellow"
+]
+if3 -> state0 [
+    label ="Yes",
+    decorate = true
+]
+
+err1 [
+    shape = box,
+    label = "Error\nMultiple devices\nfound",
+    style = "filled",
+    fillcolor = "red"
+]
+if3 -> err1 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+if4 [
+    shape = diamond,
+    label = "Found MAC?"
+]
+state0 -> if4 []
+
+err2 [
+    shape = box,
+    label = "Error\nNo MAC found.",
+    style = "filled",
+    fillcolor = "red"
+]
+if4 -> err2 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+state1 [
+    shape = box,
+    label = "Compare\nEEPROM\ncontents.",
+    style = "filled",
+    fillcolor = "yellow"
+]
+if4 -> state1 [
+    label = "Yes",
+    decorate = true
+]
+
+if5 [
+    shape = diamond,
+    label = "Contents\nare equal?"
+]
+state1 -> if5 []
+
+err3 [
+    shape = box,
+    label = "Error\nEEPROM contents\ndo not match.",
+    style = "filled",
+    fillcolor = "red"
+]
+if5 -> err3 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+finish0 [
+    shape = box,
+    label = "Test OK",
+    style = "filled,rounded",
+    fillcolor = "green"
+]
+if5 -> finish0 [
+    label = "Yes",
+    decorate = true
+]
+
+err4 [
+    shape = box,
+    label = "Error\nMultiple devices\nfound.",
+    style = "filled",
+    fillcolor = "red"
+]
+if1 -> err4 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+state2 [
+    shape = box,
+    label = "Request new or\npreviously\nassigned MAC.",
+    style = "filled",
+    fillcolor = "yellow"
+]
+if1 -> state2 [
+    label = "Yes",
+    decorate = true
+]
+
+if6 [
+    shape = diamond,
+    label = "Got MAC?"
+]
+state2 -> if6 []
+
+err5 [
+    shape = box,
+    label = "Error\nNo MAC received.",
+    style = "filled",
+    fillcolor = "red"
+]
+if6 -> err5 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+state3 [
+    shape = box,
+    label = "Write\nEEPROM\ncontents.",
+    style = "filled",
+    fillcolor = "yellow"
+]
+if6 -> state3 [
+    label = "Yes",
+    decorate = true
+]
+
+if7 [
+    shape = diamond,
+    label = "Write OK?"
+]
+state3 -> if7 []
+
+err6 [
+    shape = box,
+    label = "Error\nFailed to write\nEEPROM.",
+    style = "filled",
+    fillcolor = "red"
+]
+if7 -> err6 [
+    label = "No",
+    weight = "0.1",
+    decorate = true
+]
+
+finish1 [
+    shape = box,
+    label = "Test OK",
+    style = "filled,rounded",
+    fillcolor = "green"
+]
+if7 -> finish1 [
+    label = "Yes",
+    decorate = true
+]
+}
