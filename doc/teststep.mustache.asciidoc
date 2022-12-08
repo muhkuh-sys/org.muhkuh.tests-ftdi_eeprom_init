@@ -1,6 +1,23 @@
 The test step {{name}} programs the EEPROM connected to an FDTI device. It uses the values from the definition in the file `{{parameter.definition_file.value}}`.
 It expects an FTDI with a blank EEPROM or an already programmed EEPROM.
 
+# Parameter
+
+The following table shows all parameters for this test step.
+The "value" colum shows the assigned value.
+Some parameters have a defaul value, which is listed in the column "default". If the default value is not overwritten, the "value" column is empty. Furthermore a parameter can be connected to a system parameter or the output of another test step. In this case the value field shows "connected to" with the source of the value.
+
+.List of all parameters
+|===
+| Name        | value | default | description
+
+{{#parameter_list}}
+{{#if}}{{type=='connection'}}| `{{name}}` | connected to `{{value}}` | {{#default}}`{{default}}`{{/default}} | {{description}}{{/if}}
+{{#if}}{{type=='constant'}}| `{{name}}` | `{{value}}` | {{#default}}`{{default}}`{{/default}} | {{description}}{{/if}}
+{{#if}}{{type=='default'}}| `{{name}}` | _see default_ | {{#default}}`{{default}}`{{/default}} | {{description}}{{/if}}
+{{/parameter_list}}
+|===
+
 # Overview
 
 [graphviz,format="svg"]
