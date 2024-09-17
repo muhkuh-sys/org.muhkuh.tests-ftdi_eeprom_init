@@ -4,5 +4,5 @@
 	<groupId>org.muhkuh.tests</groupId>
 	<artifactId>ftdi_eeprom_init</artifactId>
 	<version>${PROJECT_VERSION}</version>
-	<packaging>zip</packaging>
+	<packaging>tar.xz</packaging>
 </project>
