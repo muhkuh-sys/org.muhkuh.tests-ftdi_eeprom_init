@@ -494,6 +494,9 @@ function TestClassFtdiEepromInit:__program_blank_device(tContext, tBlankDevice, 
   -- Try to reset the device in the OS so that it appears with the new values.
   tResult, strError = tContext:usb_reset_device()
   tLog.debug('usb_reset_device returned %s, %s', tostring(tResult), tostring(strError))
+
+  -- Delay a second to allow the enumeration of the device.
+  require 'socket'.sleep(1)
 end
 
 

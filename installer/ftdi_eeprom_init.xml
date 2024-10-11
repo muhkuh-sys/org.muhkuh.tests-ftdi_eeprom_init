@@ -15,5 +15,6 @@
 	<dependencies>
 		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.4-luaftdi" version="1"/>
 		<dependency group="org.muhkuh.lua" module="pretzel" artifact="pretzel" version="0"/>
+		<dependency group="com.github.lunarmodules" module="luasocket" artifact="lua5.4-luasocket" version="3"/>
 	</dependencies>
 </jonchki-artifact>
