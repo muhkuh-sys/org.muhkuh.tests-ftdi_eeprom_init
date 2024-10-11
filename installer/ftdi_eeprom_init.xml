@@ -16,8 +16,4 @@
 		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.4-luaftdi" version="1"/>
 		<dependency group="org.muhkuh.lua" module="pretzel" artifact="pretzel" version="0"/>
 	</dependencies>
-	<dependencies>
-		<dependency group="org.muhkuh.lua" module="luaftdi" artifact="lua5.1-luaftdi" version="1"/>
-		<dependency group="org.muhkuh.lua" module="pretzel" artifact="pretzel" version="0"/>
-	</dependencies>
 </jonchki-artifact>
