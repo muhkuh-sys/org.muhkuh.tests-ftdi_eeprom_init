@@ -223,7 +223,7 @@ end
 -- It is called when an element is closed.
 -- @param tParser The parser object.
 -- @param strName The name of the closed element.
-function TestClassFtdiEepromInit.parseCfg_EndElement(tParser, strName)
+function TestClassFtdiEepromInit.parseCfg_EndElement(tParser)
   local aLxpAttr = tParser:getcallbacks().userdata
 
   -- Remove the last element from the current path.
@@ -238,7 +238,7 @@ end
 -- It is called when character data is parsed.
 -- @param tParser The parser object.
 -- @param strData The character data.
-function TestClassFtdiEepromInit.parseCfg_CharacterData(tParser, strData)
+function TestClassFtdiEepromInit.parseCfg_CharacterData()
   -- The current XML definition for the FTDI setting does not use any elements
   -- with character data, so this function is empty for now.
 end
@@ -285,15 +285,15 @@ function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog)
     tLog.error(strMsg)
     error(strMsg)
   else
-    local tParseResult, strMsg, uiLine, uiCol, uiPos = tParser:parse(strXmlText)
+    local tParseResult, strParseError, uiLine, uiCol, uiPos = tParser:parse(strXmlText)
     if tParseResult~=nil then
-      tParseResult, strMsg, uiLine, uiCol, uiPos = tParser:parse()
+      tParseResult, strParseError, uiLine, uiCol, uiPos = tParser:parse()
     end
     tParser:close()
 
     if tParseResult==nil then
       tResult = nil
-      local strMsg = string.format("%s: %d,%d,%d", strMsg, uiLine, uiCol, uiPos)
+      local strMsg = string.format("%s: %d,%d,%d", strParseError, uiLine, uiCol, uiPos)
       tLog.error(strMsg)
       error(strMsg)
     elseif aLxpAttr.tResult==nil then
@@ -310,7 +310,7 @@ end
 
 
 
-function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
+function TestClassFtdiEepromInit.__get_mac(atAttr, tLog)
   local aucMac = nil
 
   local pretzel = require 'pretzel'
@@ -367,9 +367,9 @@ end
 
 
 function TestClassFtdiEepromInit:__get_serial(atAttr, tLog)
-  local strSerial = nil
+  local strSerial
 
-  local aucMac = self:__get_mac(atAttr, tLog)
+  local aucMac = self.__get_mac(atAttr, tLog)
   if aucMac==nil then
     local strMsg = ('Failed to get a pseudo MAC for the board. The serial can not be generated.')
     tLog.error(strMsg)
