@@ -584,9 +584,11 @@ function TestClassFtdiEepromInit:run()
     local usUSBVendorProgrammed = self.atSettings[luaftdi.VENDOR_ID]
     local usUSBProductProgrammed = self.atSettings[luaftdi.PRODUCT_ID]
     tLog.debug(
-      'Looking for programmed USB devices with VID=0x%04x and PID=0x%04x.',
+      'Looking for programmed USB devices with VID=0x%04x, PID=0x%04x, vendor="%s" and product="%s".',
       usUSBVendorProgrammed,
-      usUSBProductProgrammed
+      usUSBProductProgrammed,
+      self.strVendor,
+      self.strProduct
     )
     local tListProgrammed = tContext:usb_find_all(usUSBVendorProgrammed, usUSBProductProgrammed)
 
