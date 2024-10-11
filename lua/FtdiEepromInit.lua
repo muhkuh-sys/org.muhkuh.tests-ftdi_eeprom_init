@@ -188,14 +188,24 @@ function TestClassFtdiEepromInit.parseCfg_StartElement(tParser, strName, atAttri
         -- This would mean there are 2 entries with the same key in the XML.
         elseif aLxpAttr.atSettings[uiKey]~=nil then
           aLxpAttr.tResult = nil
-          aLxpAttr.tLog.error('Error in line %d, col %d: multiple definition of key "%s".', iPosLine, iPosColumn, strKey)
+          aLxpAttr.tLog.error(
+            'Error in line %d, col %d: multiple definition of key "%s".',
+            iPosLine,
+            iPosColumn,
+            strKey
+          )
 
         else
           -- Convert the value to a number.
           local ulValue = tonumber(strValue)
           if ulValue==nil then
             aLxpAttr.tResult = nil
-            aLxpAttr.tLog.error('Error in line %d, col %d: the value "%s" can not be converted to a number.', iPosLine, iPosColumn, strValue)
+            aLxpAttr.tLog.error(
+              'Error in line %d, col %d: the value "%s" can not be converted to a number.',
+              iPosLine,
+              iPosColumn,
+              strValue
+            )
           else
             -- Add the key/value pair to the settings.
             aLxpAttr.atSettings[uiKey] = ulValue
@@ -238,7 +248,8 @@ end
 --- Parse a FTDI configuration file.
 -- @param strFilename The path to the configuration file.
 -- @param tLog A lua-log object which can be used for log messages.
--- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to translate them to numbers.
+-- @param atValidKeys A list of valid keys. It is used to validate the keys pairs in the configuration file and to
+--        translate them to numbers.
 function TestClassFtdiEepromInit:parse_configuration(strFilename, tLog)
   -- Be optimistic!
   local tResult = true
@@ -313,11 +324,22 @@ function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
     if aucMac==nil then
       tLog.error('Failed to request the MAC for the board.')
     end
-    tLog.info('Received a new MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .', aucMac[1], aucMac[2], aucMac[3], aucMac[4], aucMac[5], aucMac[6])
+    tLog.info(
+      'Received a new MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .',
+      aucMac[1],
+      aucMac[2],
+      aucMac[3],
+      aucMac[4],
+      aucMac[5],
+      aucMac[6]
+    )
   elseif #tBoardInfo == 1 then
     local tAttr = tBoardInfo[1]
     local strMac = tAttr.mac
-    local strMac1, strMac2, strMac3, strMac4, strMac5, strMac6 = string.match(strMac, '(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)')
+    local strMac1, strMac2, strMac3, strMac4, strMac5, strMac6 = string.match(
+      strMac,
+      '(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)(%x%x)'
+    )
     aucMac = {
       tonumber(strMac1, 16),
       tonumber(strMac2, 16),
@@ -326,7 +348,15 @@ function TestClassFtdiEepromInit:__get_mac(atAttr, tLog)
       tonumber(strMac5, 16),
       tonumber(strMac6, 16)
     }
-    tLog.info('Found existing MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .', aucMac[1], aucMac[2], aucMac[3], aucMac[4], aucMac[5], aucMac[6])
+    tLog.info(
+      'Found existing MAC for the board: %02X:%02X:%02X:%02X:%02X:%02X .',
+      aucMac[1],
+      aucMac[2],
+      aucMac[3],
+      aucMac[4],
+      aucMac[5],
+      aucMac[6]
+    )
   else
     tLog.error('More than one entry found for the board.')
   end
@@ -393,7 +423,12 @@ function TestClassFtdiEepromInit:__verify_settings(tContext, tProgrammedDevice)
       if uiValue==tEepromValue then
         tLog.debug('The value for "%s" matches.', tostring(uiKey))
       else
-        tLog.error('The values for "%s" differ: definition="%s", eeprom="%s"', tostring(uiKey), tostring(uiValue), tostring(tEepromValue))
+        tLog.error(
+          'The values for "%s" differ: definition="%s", eeprom="%s"',
+          tostring(uiKey),
+          tostring(uiValue),
+          tostring(tEepromValue)
+        )
         fCompareResult = false
       end
     end
@@ -530,7 +565,12 @@ function TestClassFtdiEepromInit:run()
     if strManufacturer==nil and strProduct==nil and strSerial==nil then
       table.insert(atBlankDevices, tListEntry)
     else
-      tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+      tLog.debug(
+        'Filter device with manufacturer="%s", product="%s", serial="%s".',
+        tostring(strManufacturer),
+        tostring(strProduct),
+        tostring(strSerial)
+      )
     end
   end
 
@@ -543,7 +583,11 @@ function TestClassFtdiEepromInit:run()
     self.pl.pretty.dump(self.atSettings)
     local usUSBVendorProgrammed = self.atSettings[luaftdi.VENDOR_ID]
     local usUSBProductProgrammed = self.atSettings[luaftdi.PRODUCT_ID]
-    tLog.debug('Looking for programmed USB devices with VID=0x%04x and PID=0x%04x.', usUSBVendorProgrammed, usUSBProductProgrammed)
+    tLog.debug(
+      'Looking for programmed USB devices with VID=0x%04x and PID=0x%04x.',
+      usUSBVendorProgrammed,
+      usUSBProductProgrammed
+    )
     local tListProgrammed = tContext:usb_find_all(usUSBVendorProgrammed, usUSBProductProgrammed)
 
     local atProgrammedDevices = {}
@@ -555,7 +599,12 @@ function TestClassFtdiEepromInit:run()
       if strManufacturer==self.strVendor and strProduct==self.strProduct then
         table.insert(atProgrammedDevices, tListEntry)
       else
-        tLog.debug('Filter device with manufacturer="%s", product="%s", serial="%s".', tostring(strManufacturer), tostring(strProduct), tostring(strSerial))
+        tLog.debug(
+          'Filter device with manufacturer="%s", product="%s", serial="%s".',
+          tostring(strManufacturer),
+          tostring(strProduct),
+          tostring(strSerial)
+        )
       end
     end
 
